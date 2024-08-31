@@ -66,14 +66,14 @@ class vLLMEngine:
         batch_size = BatchSize(max_batch_size, min_batch_size, batch_size_growth_factor)
         
         ttft = None
-        init = time.time()
+        init = time.monotonic()
 
         async for request_output in results_generator:
             if is_first_output:  # Count input tokens only once
                 n_input_tokens = len(request_output.prompt_token_ids)
                 is_first_output = False
             if not ttft:
-                ttft = time.time() - init
+                ttft = time.monotonic() - init
                 logging.info(f"Time to first token: {ttft:.2f}s")
 
             for output in request_output.outputs:
