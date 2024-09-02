@@ -182,7 +182,8 @@ class OpenAIvLLMEngine(vLLMEngine):
             return
         
         response_generator = await generator_function(request, raw_request=None)
-
+        ttft = None
+        init = time.monotonic()
         if not openai_request.openai_input.get("stream") or isinstance(response_generator, ErrorResponse):
             yield response_generator.model_dump()
         else:
@@ -191,6 +192,9 @@ class OpenAIvLLMEngine(vLLMEngine):
             batch_size = BatchSize(self.default_batch_size, self.min_batch_size, self.batch_size_growth_factor)
         
             async for chunk_str in response_generator:
+                if not ttft:
+                    ttft = (time.monotonic() - init) * 1000
+                    logging.info(f"Time to first token: {ttft:.2f}ms")
                 if "data" in chunk_str:
                     if self.raw_openai_output:
                         data = chunk_str
